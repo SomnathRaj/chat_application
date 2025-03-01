@@ -1,0 +1,82 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+        <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Chat Application</h1>
+            {% if data['pusher_key'] %}
+            <div class="form-group col-sm-6">
+                <label for="name">Name</label>
+                <input type="text" class="form-control" id="name" name="name">
+            </div>
+            <div class="form-group col-sm-6">
+                <label for="message">Message</label>
+                <textarea type="text" class="form-control" id="message" name="message"></textarea>
+            </div>
+            <div class="form-group col-sm-6">
+                <input class="btn btn-primary" type="button" id="sendMsg" value="Send Message">
+            </div>
+            {% else %}
+            <h3>Please set all environment variables in the .flaskenv file</h3>
+            {% endif %}
+        </div>
+        <div class="container">
+            <div class="form-group col-sm-8">
+                <hr>
+            </div>
+        </div>
+        <div class="container">
+            <div class="form-group col-sm-8" id="chat_div">
+
+            </div>
+        </div>
+    </body>
+    <script>
+        $( document ).ready(function() {
+            var pusher_key = "{{ data['pusher_key'] }}";
+            var pusher_cluster = "{{ data['pusher_cluster'] }}";
+            // Enable pusher logging - don't include this in production
+            // Pusher.logToConsole = true;
+            if(pusher_key && pusher_cluster)
+            {
+                var pusher = new Pusher(pusher_key, {
+                    cluster: pusher_cluster
+                });
+
+                var channel = pusher.subscribe('channel-chat');
+                channel.bind('event-chat', function(data) {
+                    // console.log(JSON.stringify(data));
+                    $('#chat_div').prepend("<div class='form-group col-sm-8'><label for='message'>"+data.name+":</label>"+" "+data.message+"</div>");
+                });
+            }
+
+            $("#sendMsg").click(function(e){
+                e.preventDefault();
+                var name = $("#name").val();
+                var message = $("#message").val();
+                if(name != '' && message != ''){
+                    $("#name").attr("disabled", true);
+                    $.ajax({
+                        url: "chat",
+                        type: 'POST',
+                        crossDomain: true,
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        data: JSON.stringify({name:name, message:message}),
+                    }).done(function(result) {
+                        $("#message").val('');
+                        if(!result.status){
+                            alert(result.message);
+                        }
+                    });
+                }else{
+                    alert("Please enter name and message");
+                }
+            });
+        });
+    </script>
+</html>
