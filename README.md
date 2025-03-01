@@ -14,5 +14,8 @@ Run Server.
 python app.py
 ```
 
+Set the values of environemt variable in .flaskenv file
+
+
 Then open the url in the preffered browser
  [http://127.0.0.1:5000/](http://127.0.0.1:5000/)
